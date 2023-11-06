@@ -1,8 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.routers import image_router
+from backend.app.models.image_model import ImageModel
+from backend.app.database.db import engine 
 
 app = FastAPI()
+
+ImageModel.metadata.create_all(bind=engine)
 
 app.include_router(image_router.router)
 
