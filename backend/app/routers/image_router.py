@@ -34,14 +34,20 @@ def update_image_title(db: Session, image_id: int, title: str):
 def get_image(db: Session, image_id: int):
     return db.query(ImageModel).filter(ImageModel.id == image_id).first()
 
+
 # Función para eliminar una imagen por su ID
 def delete_image_from_db(db: Session, image_id: int):
     image = get_image(db, image_id)
     if image:
+        # Elimina el archivo del sistema de archivos
+        if os.path.exists(image.image_url):
+            os.remove(image.image_url)
+        
         db.delete(image)
         db.commit()
         return image
     return None
+
 
 
 # ENDPOINT POST IMAGE
@@ -57,7 +63,7 @@ def create_image(
         raise HTTPException(status_code=400, detail="Image with the same title already exists")
 
     # Guardar la imagen en el sistema de archivos
-    image_path = save_image(image)  # Utiliza la función save_image para guardar la imagen
+    image_path = save_image(image)  
     db_image = ImageModel(title=title, image_url=image_path)
 
 
@@ -83,7 +89,6 @@ def update_image(
 
 
 # ENDPOINT DELETE
-
 @router.delete("/images/{image_id}", response_model=ImageSchema)
 def delete_image(image_id: int, db: Session = Depends(get_db)):
     db_image = get_image(db, image_id)
