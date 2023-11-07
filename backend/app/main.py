@@ -2,13 +2,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.routers import image_router
 from backend.app.models.image_model import ImageModel
-from backend.app.database.db import engine 
+from backend.app.database.db import engine
+from fastapi.staticfiles import StaticFiles 
 
 app = FastAPI()
 
 ImageModel.metadata.create_all(bind=engine)
 
 app.include_router(image_router.router)
+app.mount("/images", StaticFiles(directory="D:/BUSQUEDA_EMPLEO/PicMemento_Back/images"), name="images")
 
 origins = [
     "http://localhost:5173",

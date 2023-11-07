@@ -18,7 +18,6 @@ def save_image(file: UploadFile) -> str:
         shutil.copyfileobj(file.file, image_file)
     return unique_filename
 
-# Función para actualizar el título de una imagen por su ID
 def update_image_title(db: Session, image_id: int, title: str):
     db_image = db.query(ImageModel).filter(ImageModel.id == image_id).first()
     if db_image:
@@ -26,7 +25,10 @@ def update_image_title(db: Session, image_id: int, title: str):
         db.commit()
         db.refresh(db_image)
         return db_image
+    else:
+        print(f"Imagen no encontrada para el ID: {image_id}")
     return None
+
 
 # Función para obtener una imagen por su ID
 def get_image(db: Session, image_id: int):
@@ -65,7 +67,6 @@ def create_image(
 
     return ImageSchema.from_model(db_image)
 
-
 #  ENDPOINT UPDATE
 @router.put("/images/{image_id}", response_model=ImageSchema)
 def update_image(
@@ -73,10 +74,12 @@ def update_image(
     title: str = Form(...),
     db: Session = Depends(get_db)
 ):
+    print("Recibida solicitud PUT en /images/{image_id}")
     db_image = update_image_title(db, image_id, title)
     if db_image:
         return db_image  
     raise HTTPException(status_code=404, detail="Image not found")
+
 
 
 # ENDPOINT DELETE
@@ -92,9 +95,8 @@ def delete_image(image_id: int, db: Session = Depends(get_db)):
     return db_image
 
 # ENDPOINT SHOW ALL
-
-# Ruta para obtener todas las fotos y sus títulos
 @router.get("/images", response_model=List[ImageResponse])
 def get_all_images(db: Session = Depends(get_db)):
     images = db.query(ImageModel).all()
-    return images  
+    image_responses = [ImageResponse(id=image.id, title=image.title, image_url=image.image_url) for image in images]
+    return image_responses
